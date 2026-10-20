@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Gazz POS | Store Sale</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <style>
+        .pos-layout {
+    width: 100%;
+    max-width: none;
+    display: block;
+}
+
+        .system-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 99999;
+        }
+
+        .system-dialog-overlay.show {
+            display: flex;
+        }
+
+        .system-dialog {
+            width: 100%;
+            max-width: 430px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.20);
+            overflow: hidden;
+            animation: systemDialogIn 0.18s ease;
+        }
+
+        @keyframes systemDialogIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+        }
+
+        .system-dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .system-dialog-brand {
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+        }
+
+        .system-dialog-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 7px;
+            font-size: 22px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .system-dialog-close:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .system-dialog-body {
+            padding: 24px 22px 20px;
+        }
+
+        .system-dialog-title {
+            margin: 0 0 9px;
+            color: #1f2937;
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .system-dialog-message {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .system-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 22px 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .system-dialog-button {
+            min-width: 95px;
+            height: 42px;
+            padding: 0 17px;
+            border: none;
+            border-radius: 7px;
+            font-family: "Poppins", sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .system-dialog-cancel {
+            background: #f1f5f9;
+            color: #374151;
+        }
+
+        .system-dialog-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        .system-dialog-confirm {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .system-dialog-confirm:hover {
+            background: #b91c1c;
+        }
+
+        @media (max-width: 480px) {
+
+            .system-dialog {
+                max-width: 100%;
+            }
+
+            .system-dialog-actions {
+                flex-direction: column-reverse;
+            }
+
+            .system-dialog-button {
+                width: 100%;
+            }
+
+        }
+
+        /* =========================================================
+   PRODUCT SEARCH
+   ========================================================= */
+
+.pos-product-search {
+    width: 100%;
+    height: 44px;
+
+    margin-top: 8px;
+    margin-bottom: 8px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    background: #f9fafb;
+
+    color: #1f2937;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.pos-product-search::placeholder {
+    color: #94a3b8;
+}
+
+
+.pos-product-search:focus {
+    background: #ffffff;
+
+    border-color: #dc2626;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(220, 38, 38, 0.10);
+}
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="app-shell">
+
+        <aside class="control-rail">
+
+            <a
+                class="rail-logo"
+                href="#"
+            >
+                G
+            </a>
+
+            <nav class="rail-nav">
+
+                {% if current_user.role in ['manager', 'admin'] %}
+
+                    <a
+                        class="rail-link"
+                        href="{{ url_for('reports.manager_analytics') }}"
+                    >
+                        <span>⌂</span>
+                        <small>Analytics</small>
+                    </a>
+
+                    <a
+                        class="rail-link"
+                        href="{{ url_for('products.products') }}"
+                    >
+                        <span>▦</span>
+                        <small>Stock</small>
+                    </a>
+
+                    <a
+                        class="rail-link"
+                        href="{{ url_for('fuel.fuel') }}"
+                    >
+                        <span>⛽</span>
+                        <small>Fuel</small>
+                    </a>
+
+                {% endif %}
+
+                {% if current_user.role in ['fuel_cashier', 'attendant', 'manager', 'admin'] %}
+
+                    <a
+                        class="rail-link"
+                        href="{{ url_for('sales.fuel_pos') }}"
+                    >
+                        <span>⛽</span>
+                        <small>Fuel POS</small>
+                    </a>
+
+                {% endif %}
+
+                {% if current_user.role in ['store_cashier', 'cashier', 'manager', 'admin'] %}
+
+                    <a
+                        class="rail-link active"
+                        href="{{ url_for('sales.convenience_pos') }}"
+                    >
+                        <span>₱</span>
+                        <small>Sales</small>
+                    </a>
+
+                {% endif %}
+
+            </nav>
+
+<a
+    class="rail-link logout-rail"
+    href="{{ url_for('auth.logout') }}"
+>
+    <span>↪</span>
+    <small>Log out</small>
+</a>
+
+        </aside>
+
+        <main class="workspace">
+
+            <header class="app-header">
+
+                <div
+                    class="station-name"
+                    style="font-size: 16px; font-weight: 800; color: #1f2937; letter-spacing: 0.5px;"
+                >
+                    Gazz POS Inventory
+                </div>
+
+                <div class="account-chip">
+
+                    <span class="account-initial">
+
+                        {{
+                            current_user.username[0]|upper
+                            if current_user.username
+                            else 'C'
+                        }}
+
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            {{ current_user.username }}
+                        </strong>
+
+                        <small>
+                            {{ current_user.role|capitalize }}
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section class="page-area">
+
+                <div class="inventory-title-row">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            CONVENIENCE STORE
+                        </p>
+
+                        <h1>
+                            New store sale
+                        </h1>
+
+                        <p>
+                            Record an item sale, select optional customer,
+                            generate receipts, and update inventory instantly.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="pos-tabs">
+
+                    {% if current_user.role in ['store_cashier', 'cashier', 'manager', 'admin'] %}
+
+                        <a
+                            class="active"
+                            href="{{ url_for('sales.convenience_pos') }}"
+                        >
+                            Store sale
+                        </a>
+
+                    {% endif %}
+
+                    {% if current_user.role in ['fuel_cashier', 'attendant', 'manager', 'admin'] %}
+
+                        <a
+                            href="{{ url_for('sales.fuel_pos') }}"
+                        >
+                            Fuel sale
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% for category, message in messages %}
+
+                        <div class="system-message {{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                {% endwith %}
+
+                <section class="pos-layout">
+
+                    <article class="panel pos-form-panel">
+
+                        <p class="eyebrow">
+                            TRANSACTION DETAILS
+                        </p>
+
+                        <h2>
+                            Checkout
+                        </h2>
+
+                        <form
+                            class="pos-form"
+                            method="POST"
+                            action="{{ url_for('sales.convenience_pos') }}"
+                        >
+
+                            
+
+                            <label>
+
+                                Product
+
+                                <select
+                                    id="product_id"
+                                    name="product_id"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select a product
+                                    </option>
+
+                                    {% for item in items %}
+
+                                        <option
+                                            value="{{ item.product_id if item.product_id is defined else item[0] }}"
+                                            data-price="{{ item.selling_price if item.selling_price is defined else item[2] }}"
+                                        >
+
+                                            {{ item.product_name if item.product_name is defined else item[1] }}
+
+                                            — ₱{{ "%.2f"|format(item.selling_price if item.selling_price is defined else item[2]) }}
+
+                                            ({{ item.stock_quantity if item.stock_quantity is defined else item[3] }} in stock)
+
+                                        </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </label>
+
+                            <label>
+
+                                Quantity
+
+                                <input
+                                    id="quantity"
+                                    name="quantity"
+                                    type="number"
+                                    min="1"
+                                    value="1"
+                                    required
+                                >
+
+                            </label>
+
+                            <label>
+
+                                Payment Method
+
+                                <select
+                                    id="payment_type"
+                                    name="payment_type"
+                                >
+
+                                    <option value="cash">
+                                        Cash
+                                    </option>
+
+                                    <option value="gcash">
+                                        GCash
+                                    </option>
+
+                                    <option value="other">
+                                        Credit Card / Other
+                                    </option>
+
+                                </select>
+
+                            </label>
+
+                            <label id="cash-payment-field">
+
+                                Amount Paid (₱)
+
+                                <input
+                                    id="amount_paid"
+                                    name="amount_paid"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="0.00"
+                                    required
+                                >
+
+                            </label>
+
+                            <div class="sale-total-box">
+
+                                <div>
+
+                                    <span>
+                                        Total Due
+                                    </span>
+
+                                    <strong id="sale-total">
+                                        ₱0.00
+                                    </strong>
+
+                                </div>
+
+                                <div style="margin-top: 10px;">
+
+                                    <span>
+                                        Change
+                                    </span>
+
+                                    <strong
+                                        id="sale-change"
+                                        style="color: #2e7d32;"
+                                    >
+                                        ₱0.00
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                            <button
+                                class="primary-button pos-button"
+                                type="submit"
+                            >
+                                Complete Sale & Print Receipt
+                            </button>
+
+                        </form>
+
+                    </article>
+
+                </section>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div
+        id="system-dialog-overlay"
+        class="system-dialog-overlay"
+        onclick="if (event.target === this) closeConfirmDialog();"
+    >
+
+        <div
+            class="system-dialog"
+            onclick="event.stopPropagation()"
+        >
+
+            <div class="system-dialog-header">
+
+                <span class="system-dialog-brand">
+                    GAZZ POS INVENTORY
+                </span>
+
+                <button
+                    type="button"
+                    class="system-dialog-close"
+                    onclick="closeConfirmDialog()"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div class="system-dialog-body">
+
+                <h3
+                    id="system-dialog-title"
+                    class="system-dialog-title"
+                >
+                    Confirm Logout
+                </h3>
+
+                <p
+                    id="system-dialog-message"
+                    class="system-dialog-message"
+                >
+                    Are you sure you want to log out?
+                </p>
+
+            </div>
+
+            <div class="system-dialog-actions">
+
+                <button
+                    type="button"
+                    class="system-dialog-button system-dialog-cancel"
+                    onclick="closeConfirmDialog()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    id="system-dialog-confirm"
+                    class="system-dialog-button system-dialog-confirm"
+                >
+                    Log Out
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const productSelect =
+            document.getElementById("product_id");
+
+        const productSearch =
+            document.getElementById("product-search");
+
+        const quantityInput =
+            document.getElementById("quantity");
+
+        const amountPaidInput =
+            document.getElementById("amount_paid");
+
+        const paymentTypeSelect =
+            document.getElementById("payment_type");
+
+        const cashPaymentField =
+            document.getElementById("cash-payment-field");
+
+        const totalElement =
+            document.getElementById("sale-total");
+
+        const changeElement =
+            document.getElementById("sale-change");
+
+
+        function calculateTransaction() {
+
+            const selectedOption =
+                productSelect.options[
+                    productSelect.selectedIndex
+                ];
+
+            const price =
+                Number(
+                    selectedOption
+                        ? selectedOption.dataset.price
+                        : 0
+                ) || 0;
+
+            const quantity =
+                Number(
+                    quantityInput.value || 0
+                );
+
+            const total =
+                price * quantity;
+
+            const amountPaid =
+                Number(
+                    amountPaidInput.value || 0
+                );
+
+            const change =
+                amountPaid - total;
+
+            totalElement.textContent =
+                "₱" + total.toFixed(2);
+
+            if (amountPaid > 0) {
+
+                changeElement.textContent =
+                    "₱" +
+                    (
+                        change >= 0
+                            ? change.toFixed(2)
+                            : "0.00"
+                    );
+
+                changeElement.style.color =
+                    change < 0
+                        ? "#d32f2f"
+                        : "#2e7d32";
+
+            } else {
+
+                changeElement.textContent =
+                    "₱0.00";
+
+                changeElement.style.color =
+                    "#2e7d32";
+
+            }
+
+        }
+
+
+        function updatePaymentField() {
+
+            if (
+                paymentTypeSelect.value === "cash"
+            ) {
+
+                cashPaymentField.style.display =
+                    "";
+
+                amountPaidInput.required =
+                    true;
+
+            } else {
+
+                cashPaymentField.style.display =
+                    "none";
+
+                amountPaidInput.required =
+                    false;
+
+                amountPaidInput.value =
+                    "";
+
+            }
+
+            calculateTransaction();
+
+        }
+
+
+        productSelect.addEventListener(
+            "change",
+            calculateTransaction
+        );
+
+        quantityInput.addEventListener(
+            "input",
+            calculateTransaction
+        );
+
+        amountPaidInput.addEventListener(
+            "input",
+            calculateTransaction
+        );
+
+        paymentTypeSelect.addEventListener(
+            "change",
+            updatePaymentField
+        );
+
+
+        calculateTransaction();
+
+        updatePaymentField();
+
+
+        let logoutUrl = "";
+
+
+        function showLogoutDialog(event) {
+
+            if (event) {
+                event.preventDefault();
+            }
+
+            const logoutLink =
+                event.currentTarget;
+
+            logoutUrl =
+                logoutLink.getAttribute("href");
+
+            const overlay =
+                document.getElementById(
+                    "system-dialog-overlay"
+                );
+
+            const title =
+                document.getElementById(
+                    "system-dialog-title"
+                );
+
+            const message =
+                document.getElementById(
+                    "system-dialog-message"
+                );
+
+            const confirmButton =
+                document.getElementById(
+                    "system-dialog-confirm"
+                );
+
+            title.textContent =
+                "Confirm Logout";
+
+            message.textContent =
+                "Are you sure you want to log out?";
+
+            confirmButton.textContent =
+                "Log Out";
+
+            overlay.classList.add("show");
+
+            document.body.style.overflow =
+                "hidden";
+
+            return false;
+
+        }
+
+
+        function closeConfirmDialog() {
+
+            const overlay =
+                document.getElementById(
+                    "system-dialog-overlay"
+                );
+
+            overlay.classList.remove("show");
+
+            document.body.style.overflow =
+                "";
+
+            logoutUrl =
+                "";
+
+        }
+
+
+        document
+            .getElementById("system-dialog-confirm")
+            .addEventListener(
+                "click",
+                function () {
+
+                    if (logoutUrl) {
+
+                        const url =
+                            logoutUrl;
+
+                        logoutUrl =
+                            "";
+
+                        window.location.assign(
+                            url
+                        );
+
+                    }
+
+                }
+            );
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (event.key === "Escape") {
+
+                    closeConfirmDialog();
+
+                }
+
+            }
+        );
+
+        /* =========================================================
+   PRODUCT SEARCH
+   ========================================================= */
+
+if (productSearch) {
+
+    /*
+     * Save the original product options.
+     */
+
+    const originalProductOptions =
+        Array.from(
+            productSelect.options
+        ).map(
+            function (option) {
+
+                return {
+
+                    value: option.value,
+
+                    text: option.textContent,
+
+                    price: option.dataset.price || "",
+
+                    disabled: option.disabled
+
+                };
+
+            }
+        );
+
+
+    productSearch.addEventListener(
+        "input",
+        function () {
+
+            const search =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            /*
+             * Remember currently selected product.
+             */
+
+            const currentValue =
+                productSelect.value;
+
+
+            productSelect.innerHTML = "";
+
+
+            /*
+             * Always keep the placeholder.
+             */
+
+            const placeholder =
+                originalProductOptions[0];
+
+
+            if (placeholder) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    placeholder.value;
+
+                option.textContent =
+                    placeholder.text;
+
+                productSelect.appendChild(
+                    option
+                );
+
+            }
+
+
+            /*
+             * Add matching products.
+             */
+
+            originalProductOptions
+                .slice(1)
+                .forEach(
+                    function (item) {
+
+                        if (
+                            item.text
+                                .toLowerCase()
+                                .includes(search)
+                        ) {
+
+                            const option =
+                                document.createElement(
+                                    "option"
+                                );
+
+
+                            option.value =
+                                item.value;
+
+
+                            option.textContent =
+                                item.text;
+
+
+                            option.disabled =
+                                item.disabled;
+
+
+                            if (
+                                item.price
+                            ) {
+
+                                option.dataset.price =
+                                    item.price;
+
+                            }
+
+
+                            if (
+                                item.value ===
+                                currentValue
+                            ) {
+
+                                option.selected =
+                                    true;
+
+                            }
+
+
+                            productSelect.appendChild(
+                                option
+                            );
+
+                        }
+
+                    }
+                );
+
+
+            /*
+             * Recalculate total after filtering.
+             */
+
+            calculateTransaction();
+
+        }
+    );
+
+
+    /*
+     * Clear search after product selection.
+     */
+
+    productSelect.addEventListener(
+        "change",
+        function () {
+
+            productSearch.value = "";
+
+            restoreProducts();
+
+            calculateTransaction();
+
+        }
+    );
+
+
+    function restoreProducts() {
+
+        const currentValue =
+            productSelect.value;
+
+
+        productSelect.innerHTML = "";
+
+
+        originalProductOptions.forEach(
+            function (item) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    item.value;
+
+
+                option.textContent =
+                    item.text;
+
+
+                option.disabled =
+                    item.disabled;
+
+
+                if (item.price) {
+
+                    option.dataset.price =
+                        item.price;
+
+                }
+
+
+                if (
+                    item.value ===
+                    currentValue
+                ) {
+
+                    option.selected =
+                        true;
+
+                }
+
+
+                productSelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+    }
+
+}
+
+    </script>
+<script src="{{ url_for('static', filename='js/logout-confirm.js') }}"></script>
+</body>
+
+</html>

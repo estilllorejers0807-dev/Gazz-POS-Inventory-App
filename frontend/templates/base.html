@@ -1,0 +1,36 @@
+<!-- Sidebar Navigation -->
+<ul class="nav-links">
+
+  <!-- Analytics & Stock: Managers & Admins only -->
+  {% if current_user.role in ['manager', 'admin'] %}
+  <li>
+    <a href="{{ url_for('reports.manager_analytics') }}">
+      <i class="icon-analytics"></i> Analytics
+    </a>
+  </li>
+  <li>
+    <a href="{{ url_for('inventory.stock') }}">
+      <i class="icon-stock"></i> Stock
+    </a>
+  </li>
+  {% endif %}
+
+  <!-- Fuel Tab: Fuel Cashiers, Attendants, Managers, Admins -->
+  {% if current_user.role in ['fuel_cashier', 'attendant', 'manager', 'admin'] %}
+  <li>
+    <a href="{{ url_for('sales.fuel_pos') }}">
+      <i class="icon-fuel"></i> Fuel
+    </a>
+  </li>
+  {% endif %}
+
+  <!-- Sales / Store Tab: Store Cashiers, Cashiers, Managers, Admins -->
+  {% if current_user.role in ['store_cashier', 'cashier', 'manager', 'admin'] %}
+  <li>
+    <a href="{{ url_for('sales.convenience_pos') }}">
+      <i class="icon-sales"></i> Sales
+    </a>
+  </li>
+  {% endif %}
+
+</ul>

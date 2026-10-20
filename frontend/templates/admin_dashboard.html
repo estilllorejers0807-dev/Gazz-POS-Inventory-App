@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Gazz POS | Administration</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <style>
+
+        .page-area {
+            padding: 32px 42px 28px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .admin-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            margin-bottom: 24px;
+        }
+
+        .admin-hero-content {
+            max-width: 760px;
+        }
+
+        .admin-eyebrow {
+            margin: 0 0 8px;
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .admin-hero h1 {
+            margin: 0;
+            color: #1f2937;
+            font-size: clamp(32px, 4vw, 44px);
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .admin-description {
+            margin: 10px 0 0;
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .admin-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 11px 15px;
+            background: #f2fef9;
+            border: 1px solid #cafee7;
+            border-radius: 8px;
+            color: #1b9964;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .admin-status .signal-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1b9964;
+            display: inline-block;
+        }
+
+        .admin-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .admin-stat-card {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 120px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+        }
+
+        .admin-stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #dc2626;
+        }
+
+        .admin-stat-label {
+            margin: 0;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.1px;
+        }
+
+        .admin-stat-value {
+            margin: 8px 0 3px;
+            color: #1f2937;
+            font-size: 29px;
+            font-weight: 800;
+        }
+
+        .admin-stat-description {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .admin-content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .admin-section-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .roles-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-section-header {
+            margin-bottom: 17px;
+        }
+
+        .admin-section-header .eyebrow {
+            margin: 0 0 5px;
+            color: #dc2626;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.6px;
+        }
+
+        .admin-section-header h2 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .admin-section-header p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .admin-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 22px;
+        }
+
+        .admin-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 22px;
+            min-height: 150px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            text-decoration: none;
+            text-align: center;
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease;
+        }
+
+        .admin-action:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+            transform: translateY(-2px);
+        }
+
+        .admin-action-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 9px;
+            color: #dc2626;
+            font-size: 20px;
+        }
+
+        .admin-action-content {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .admin-action-content strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .admin-action-content span {
+            display: block;
+            margin: 0 auto;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+
+        .role-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .role-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 12px 14px;
+            min-height: 0;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .role-name {
+            color: #374151;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .role-count {
+            min-width: 30px;
+            padding: 4px 8px;
+            text-align: center;
+            background: #fef2f2;
+            color: #991b1b;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .flash-container {
+            margin-bottom: 20px;
+        }
+
+        .flash-message {
+            padding: 12px 15px;
+            border-radius: 7px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .flash-success {
+            background: #e8f7ee;
+            color: #176b3a;
+            border: 1px solid #b9e4c9;
+        }
+
+        .flash-error {
+            background: #fbeaea;
+            color: #a51d2a;
+            border: 1px solid #efb7bd;
+        }
+
+        .system-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 99999;
+        }
+
+        .system-dialog-overlay.show {
+            display: flex;
+        }
+
+        .system-dialog {
+            width: 100%;
+            max-width: 430px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.20);
+            overflow: hidden;
+            animation: systemDialogIn 0.18s ease;
+        }
+
+        @keyframes systemDialogIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+        }
+
+        .system-dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 17px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .system-dialog-brand {
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+        }
+
+        .system-dialog-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 7px;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .system-dialog-close:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .system-dialog-body {
+            padding: 24px 22px 20px;
+        }
+
+        .system-dialog-title {
+            margin: 0 0 9px;
+            color: #1f2937;
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .system-dialog-message {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .system-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 22px 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .system-dialog-button {
+            min-width: 95px;
+            height: 42px;
+            padding: 0 17px;
+            border: none;
+            border-radius: 7px;
+            font-family: "Poppins", sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .system-dialog-cancel {
+            background: #f1f5f9;
+            color: #374151;
+        }
+
+        .system-dialog-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        .system-dialog-confirm {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .system-dialog-confirm:hover {
+            background: #b91c1c;
+        }
+
+        @media (max-width: 1100px) {
+
+            .admin-content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-section-card {
+                height: auto;
+            }
+
+            .roles-section {
+                display: block;
+            }
+
+            .role-list {
+                flex: none;
+            }
+
+            .role-item {
+                flex: none;
+                min-height: 50px;
+            }
+
+        }
+
+        @media (max-width: 850px) {
+
+            .page-area {
+                padding: 28px 22px 24px;
+            }
+
+            .admin-hero {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 22px;
+            }
+
+            .admin-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .page-area {
+                padding: 22px 16px;
+            }
+
+            .admin-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-hero h1 {
+                font-size: 30px;
+            }
+
+            .admin-status {
+                width: fit-content;
+            }
+
+            .admin-section-card,
+            .admin-stat-card {
+                border-radius: 10px;
+            }
+
+            .admin-action-content span {
+                white-space: normal;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+
+            .system-dialog {
+                max-width: 100%;
+            }
+
+            .system-dialog-actions {
+                flex-direction: column-reverse;
+            }
+
+            .system-dialog-button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <aside class="control-rail">
+
+        <a
+            class="rail-logo"
+            href="{{ url_for('admin.admin_dashboard') }}"
+        >
+            G
+        </a>
+
+        <nav class="rail-nav">
+
+            <a
+                class="rail-link active"
+                href="{{ url_for('admin.admin_dashboard') }}"
+            >
+
+                <span>⌂</span>
+
+                <small>
+                    Admin
+                </small>
+
+            </a>
+
+            <a
+                class="rail-link"
+                href="{{ url_for('users.users') }}"
+            >
+
+                <span>♙</span>
+
+                <small>
+                    Users
+                </small>
+
+            </a>
+
+        </nav>
+
+<a
+    class="rail-link logout-rail"
+    href="{{ url_for('auth.logout') }}"
+>
+    <span>↪</span>
+    <small>Log out</small>
+</a>
+    </aside>
+
+    <main class="workspace">
+
+        <header class="app-header">
+
+            <div
+                class="station-name"
+                style="font-size: 16px; font-weight: 800; color: #1f2937; letter-spacing: 0.5px;"
+            >
+                Gazz POS Inventory
+            </div>
+
+            <div class="account-chip">
+
+                <span class="account-initial">
+
+                    {{
+                        current_user.username[0]|upper
+                        if current_user.username
+                        else 'A'
+                    }}
+
+                </span>
+
+                <div>
+
+                    <strong>
+
+                        {{
+                            current_user.full_name
+                            if current_user.full_name
+                            else current_user.username
+                        }}
+
+                    </strong>
+
+                    <small>
+                        Administrator
+                    </small>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="page-area">
+
+            <div class="admin-hero">
+
+                <div class="admin-hero-content">
+
+                    <p class="admin-eyebrow">
+                        SYSTEM ADMINISTRATION
+                    </p>
+
+                    <h1>
+                        Administration Center
+                    </h1>
+
+                    <p class="admin-description">
+                        Manage system users, access roles,
+                        and essential system information.
+                    </p>
+
+                </div>
+
+                <div class="admin-status">
+
+                    <span class="signal-dot"></span>
+
+                    Online
+
+                </div>
+
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="flash-container">
+
+                        {% for category, message in messages %}
+
+                            <div
+                                class="
+                                    flash-message
+                                    {% if category == 'success' %}
+                                        flash-success
+                                    {% else %}
+                                        flash-error
+                                    {% endif %}
+                                "
+                            >
+
+                                {{ message }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+            <section class="admin-summary-grid">
+
+                <article class="admin-stat-card">
+
+                    <p class="admin-stat-label">
+                        TOTAL USERS
+                    </p>
+
+                    <h2 class="admin-stat-value">
+                        {{ total_users }}
+                    </h2>
+
+                    <p class="admin-stat-description">
+                        Registered accounts
+                    </p>
+
+                </article>
+
+                <article class="admin-stat-card">
+
+                    <p class="admin-stat-label">
+                        ACTIVE USERS
+                    </p>
+
+                    <h2 class="admin-stat-value">
+                        {{ active_users }}
+                    </h2>
+
+                    <p class="admin-stat-description">
+                        Accounts allowed to log in
+                    </p>
+
+                </article>
+
+                <article class="admin-stat-card">
+
+                    <p class="admin-stat-label">
+                        INACTIVE USERS
+                    </p>
+
+                    <h2 class="admin-stat-value">
+                        {{ inactive_users }}
+                    </h2>
+
+                    <p class="admin-stat-description">
+                        Accounts currently disabled
+                    </p>
+
+                </article>
+
+            </section>
+
+            <div class="admin-content-grid">
+
+                <section class="admin-section-card">
+
+                    <div class="admin-section-header">
+
+                        <p class="eyebrow">
+                            ADMINISTRATION
+                        </p>
+
+                        <h2>
+                            Administrative Actions
+                        </h2>
+
+                        <p>
+                            Access the functions required to
+                            manage Gazz POS system accounts.
+                        </p>
+
+                    </div>
+
+                    <div class="admin-actions">
+
+                        <a
+                            href="{{ url_for('users.users') }}"
+                            class="admin-action"
+                        >
+
+                            <div class="admin-action-icon">
+                                👥
+                            </div>
+
+                            <div class="admin-action-content">
+
+                                <strong>
+                                    User Accounts
+                                </strong>
+
+                                <span>
+                                    Manage employee accounts, account status, and user information.
+                                </span>
+
+                            </div>
+
+                        </a>
+
+                        <a
+                            href="{{ url_for('users.users') }}"
+                            class="admin-action"
+                        >
+
+                            <div class="admin-action-icon">
+                                🔐
+                            </div>
+
+                            <div class="admin-action-content">
+
+                                <strong>
+                                    Roles & Access
+                                </strong>
+
+                                <span>
+                                    Assign and manage system roles for each user account.
+                                </span>
+
+                            </div>
+
+                        </a>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-section-card roles-section">
+
+                    <div class="admin-section-header">
+
+                        <p class="eyebrow">
+                            ACCESS CONTROL
+                        </p>
+
+                        <h2>
+                            User Roles
+                        </h2>
+
+                        <p>
+                            Current number of accounts assigned
+                            to each system role.
+                        </p>
+
+                    </div>
+
+                    <div class="role-list">
+
+                        {% if users_by_role %}
+
+                            {% for item in users_by_role %}
+
+                                <div class="role-item">
+
+                                    <span class="role-name">
+
+                                        {% if item.role == "admin" %}
+                                            Administrator
+                                        {% elif item.role == "manager" %}
+                                            Manager
+                                        {% elif item.role == "store_cashier" %}
+                                            Store Cashier
+                                        {% elif item.role == "fuel_cashier" %}
+                                            Fuel Cashier
+                                        {% else %}
+                                            {{ item.role|replace("_", " ")|title }}
+                                        {% endif %}
+
+                                    </span>
+
+                                    <span class="role-count">
+                                        {{ item.total }}
+                                    </span>
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <div class="empty-state">
+                                No user role data available.
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div
+    id="system-dialog-overlay"
+    class="system-dialog-overlay"
+    onclick="if (event.target === this) closeConfirmDialog();"
+>
+
+    <div
+        class="system-dialog"
+        onclick="event.stopPropagation()"
+    >
+
+        <div class="system-dialog-header">
+
+            <span class="system-dialog-brand">
+                GAZZ POS INVENTORY
+            </span>
+
+            <button
+                type="button"
+                class="system-dialog-close"
+                onclick="closeConfirmDialog()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="system-dialog-body">
+
+            <h3
+                id="system-dialog-title"
+                class="system-dialog-title"
+            >
+                Confirm Action
+            </h3>
+
+            <p
+                id="system-dialog-message"
+                class="system-dialog-message"
+            >
+                Are you sure?
+            </p>
+
+        </div>
+
+        <div class="system-dialog-actions">
+
+            <button
+                type="button"
+                class="system-dialog-button system-dialog-cancel"
+                onclick="closeConfirmDialog()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                id="system-dialog-confirm"
+                class="system-dialog-button system-dialog-confirm"
+            >
+                Confirm
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    let confirmForm = null;
+    let confirmUrl = "";
+
+    function openConfirmDialog(event, title, message, buttonText) {
+
+        if (event) {
+            event.preventDefault();
+        }
+
+        const overlay =
+            document.getElementById("system-dialog-overlay");
+
+        const titleElement =
+            document.getElementById("system-dialog-title");
+
+        const messageElement =
+            document.getElementById("system-dialog-message");
+
+        const confirmButton =
+            document.getElementById("system-dialog-confirm");
+
+        if (!overlay || !titleElement || !messageElement || !confirmButton) {
+            return true;
+        }
+
+        confirmForm =
+            event &&
+            event.currentTarget &&
+            event.currentTarget.tagName === "FORM"
+                ? event.currentTarget
+                : null;
+
+        confirmUrl =
+            event &&
+            event.currentTarget &&
+            event.currentTarget.tagName === "A"
+                ? event.currentTarget.href
+                : "";
+
+        titleElement.textContent = title;
+        messageElement.textContent = message;
+        confirmButton.textContent = buttonText;
+
+        overlay.classList.add("show");
+
+        document.body.style.overflow = "hidden";
+
+        return false;
+    }
+
+
+    function closeConfirmDialog() {
+
+        const overlay =
+            document.getElementById("system-dialog-overlay");
+
+        if (overlay) {
+            overlay.classList.remove("show");
+        }
+
+        document.body.style.overflow = "";
+
+        confirmForm = null;
+        confirmUrl = "";
+
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const confirmButton =
+            document.getElementById("system-dialog-confirm");
+
+        if (!confirmButton) {
+            return;
+        }
+
+        confirmButton.addEventListener("click", function () {
+
+            if (confirmForm) {
+
+                const form = confirmForm;
+
+                confirmForm = null;
+
+                form.submit();
+
+                return;
+
+            }
+
+            if (confirmUrl) {
+
+                const logoutUrl = confirmUrl;
+
+                confirmUrl = "";
+
+                window.location.assign(logoutUrl);
+
+            }
+
+        });
+
+    });
+
+
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+
+            closeConfirmDialog();
+
+        }
+
+    });
+
+</script>
+<script src="{{ url_for('static', filename='js/logout-confirm.js') }}"></script>
+</body>
+
+</html>

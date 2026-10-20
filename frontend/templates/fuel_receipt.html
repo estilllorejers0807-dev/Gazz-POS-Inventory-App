@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Fuel Receipt #{{ sale.sale_id }}</title>
+
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+
+
+    <style>
+
+        body {
+            background: #f3f4f6;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+
+        .receipt-page {
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: flex-start;
+
+            padding: 40px 20px;
+
+        }
+
+
+        .receipt-container {
+
+            width: 100%;
+
+            max-width: 480px;
+
+            background: #ffffff;
+
+            border-radius: 12px;
+
+            padding: 30px;
+
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+
+        }
+
+
+        .receipt-header {
+
+            text-align: center;
+
+            border-bottom: 2px dashed #d1d5db;
+
+            padding-bottom: 20px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .receipt-header h1 {
+
+            margin: 0;
+
+            font-size: 26px;
+
+            color: #c1121f;
+
+        }
+
+
+        .receipt-header p {
+
+            margin: 6px 0;
+
+            color: #6b7280;
+
+            font-size: 14px;
+
+        }
+
+
+        .receipt-title {
+
+            text-align: center;
+
+            font-weight: bold;
+
+            letter-spacing: 1px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .receipt-info {
+
+            font-size: 14px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .receipt-info-row {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        .receipt-info-row span:first-child {
+
+            color: #6b7280;
+
+        }
+
+
+        .receipt-info-row strong {
+
+            text-align: right;
+
+            color: #1f2937;
+
+        }
+
+
+        .fuel-details {
+
+            border-top: 1px solid #d1d5db;
+
+            border-bottom: 1px solid #d1d5db;
+
+            padding: 15px 0;
+
+            margin: 20px 0;
+
+        }
+
+
+        .fuel-row {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .fuel-row:last-child {
+
+            margin-bottom: 0;
+
+        }
+
+
+        .fuel-label {
+
+            color: #6b7280;
+
+        }
+
+
+        .receipt-summary {
+
+            margin-top: 20px;
+
+            border-top: 2px dashed #d1d5db;
+
+            padding-top: 15px;
+
+        }
+
+
+        .summary-row {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 10px;
+
+            font-size: 15px;
+
+        }
+
+
+        .summary-row.total {
+
+            font-size: 22px;
+
+            font-weight: bold;
+
+            padding-top: 10px;
+
+            border-top: 1px solid #d1d5db;
+
+        }
+
+
+        .receipt-footer {
+
+            text-align: center;
+
+            margin-top: 30px;
+
+            border-top: 2px dashed #d1d5db;
+
+            padding-top: 20px;
+
+            color: #6b7280;
+
+            font-size: 13px;
+
+        }
+
+
+        .receipt-actions {
+
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 25px;
+
+        }
+
+
+        .receipt-actions button,
+
+        .receipt-actions a {
+
+            flex: 1;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            border: none;
+
+            text-align: center;
+
+            text-decoration: none;
+
+            cursor: pointer;
+
+            font-size: 14px;
+
+        }
+
+
+        .print-button {
+
+            background: #c1121f;
+
+            color: white;
+
+        }
+
+
+        .back-button {
+
+            background: #e5e7eb;
+
+            color: #c1121f;
+
+        }
+
+
+        @media print {
+
+            body {
+
+                background: white;
+
+            }
+
+
+            .receipt-page {
+
+                padding: 0;
+
+            }
+
+
+            .receipt-container {
+
+                box-shadow: none;
+
+                max-width: 100%;
+
+                border-radius: 0;
+
+            }
+
+
+            .receipt-actions {
+
+                display: none;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="receipt-page">
+
+
+    <div class="receipt-container">
+
+
+        <!-- HEADER -->
+
+        <div class="receipt-header">
+
+            <h1>GAZZ STATION</h1>
+
+            <p>Fuel Station</p>
+
+            <p>Official Fuel Sales Receipt</p>
+
+        </div>
+
+
+        <div class="receipt-title">
+
+            FUEL TRANSACTION
+
+        </div>
+
+
+        <!-- TRANSACTION INFORMATION -->
+
+        <div class="receipt-info">
+
+
+            <div class="receipt-info-row">
+
+                <span>Receipt No.</span>
+
+                <strong>#{{ sale.sale_id }}</strong>
+
+            </div>
+
+
+            <div class="receipt-info-row">
+
+                <span>Date</span>
+
+                <strong>
+
+                    {{ sale.sale_date.strftime('%B %d, %Y %I:%M %p')
+                    if sale.sale_date else '' }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="receipt-info-row">
+
+                <span>Cashier</span>
+
+                <strong>
+
+                    {{ sale.cashier_name }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="receipt-info-row">
+
+                <span>Customer</span>
+
+                <strong>
+
+                    {{ sale.customer_name
+                    if sale.customer_name
+                    else 'Walk-in Customer' }}
+
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- FUEL DETAILS -->
+
+        <div class="fuel-details">
+
+
+            <div class="fuel-row">
+
+                <span class="fuel-label">
+
+                    Pump
+
+                </span>
+
+                <strong>
+
+                    {{ sale.pump_number }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="fuel-row">
+
+                <span class="fuel-label">
+
+                    Fuel Type
+
+                </span>
+
+                <strong>
+
+                    {{ sale.fuel_name }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="fuel-row">
+
+                <span class="fuel-label">
+
+                    Liters
+
+                </span>
+
+                <strong>
+
+                    {{ "{:,.3f}".format(sale.liters) }} L
+
+                </strong>
+
+            </div>
+
+
+            <div class="fuel-row">
+
+                <span class="fuel-label">
+
+                    Price / Liter
+
+                </span>
+
+                <strong>
+
+                    ₱{{ "{:,.2f}".format(sale.price_per_liter) }}
+
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- PAYMENT SUMMARY -->
+
+        <div class="receipt-summary">
+
+
+            <div class="summary-row">
+
+                <span>Subtotal</span>
+
+                <strong>
+
+                    ₱{{ "{:,.2f}".format(sale.subtotal) }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row total">
+
+                <span>TOTAL</span>
+
+                <strong>
+
+                    ₱{{ "{:,.2f}".format(sale.total_amount) }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>Payment Method</span>
+
+                <strong>
+
+                    {{ sale.payment_type|upper }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>Amount Received</span>
+
+                <strong>
+
+                    ₱{{ "{:,.2f}".format(sale.amount_received) }}
+
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>Change</span>
+
+                <strong>
+
+                    ₱{{ "{:,.2f}".format(sale.change_amount) }}
+
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="receipt-footer">
+
+            <p>
+
+                <strong>Thank you for choosing GAZZ STATION!</strong>
+
+            </p>
+
+            <p>
+
+                Please keep this receipt for your records.
+
+            </p>
+
+            <p>
+
+                GAZZ STATION · Fuel Service
+
+            </p>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="receipt-actions">
+
+
+            <a
+                href="{{ url_for('sales.fuel_pos') }}"
+                class="back-button">
+
+                ← New Sale
+
+            </a>
+
+
+            <button
+                type="button"
+                class="print-button"
+                onclick="window.print()">
+
+                🖨 Print Receipt
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>

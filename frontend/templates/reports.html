@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gazz POS | Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="control-rail">
+            <a class="rail-logo" href="{{ url_for('auth.dashboard') }}">G</a>
+
+            <nav class="rail-nav">
+                <a class="rail-link" href="{{ url_for('auth.dashboard') }}">
+                    <span>⌂</span>
+                    <small>Home</small>
+                </a>
+
+                <a class="rail-link" href="{{ url_for('products.products') }}">
+                    <span>▦</span>
+                    <small>Stock</small>
+                </a>
+
+<a class="rail-link" href="{{ url_for('fuel.fuel') }}">
+    <span>⛽</span>
+    <small>Fuel</small>
+</a>
+
+<a class="rail-link" href="{{ url_for('sales.pos') }}">
+    <span>₱</span>
+    <small>Sales</small>
+</a>
+
+                <a class="rail-link active" href="{{ url_for('reports.reports') }}">
+                    <span>◫</span>
+                    <small>Reports</small>
+                </a>
+            </nav>
+
+            <a class="rail-link logout-rail" href="{{ url_for('auth.logout') }}">
+                <span>↪</span>
+                <small>Exit</small>
+            </a>
+        </aside>
+
+        <main class="workspace">
+            <header class="app-header">
+                <div class="station-name" style="font-size: 16px; font-weight: 800; color: #1f2937; letter-spacing: 0.5px;">
+
+                Gazz POS Inventory
+
+            </div>
+
+                <div class="account-chip">
+                    <span class="account-initial">{{ current_user.full_name[0] }}</span>
+                    <div>
+                        <strong>{{ current_user.full_name }}</strong>
+                        <small>Manager</small>
+                    </div>
+                </div>
+            </header>
+
+            <section class="page-area">
+                <div class="report-title-row">
+                    <div>
+                        <p class="eyebrow">BUSINESS PERFORMANCE</p>
+                        <h1>Daily operations report</h1>
+                        <p>Review store and fuel performance for a selected date.</p>
+                    </div>
+
+                    <form class="report-date-form" method="GET">
+                        <label>
+                            Report date
+                            <input type="date" name="date" value="{{ selected_date }}">
+                        </label>
+                        <button type="submit">View report</button>
+                    </form>
+                </div>
+
+                <section class="metric-grid">
+                    <article class="metric-card featured-metric">
+                        <span class="metric-label">TOTAL SALES</span>
+                        <strong>₱{{ "{:,.2f}".format(summary.total_sales) }}</strong>
+                        <small>{{ summary.transaction_count }} completed transaction(s)</small>
+                    </article>
+
+                    <article class="metric-card">
+                        <span class="metric-icon">▦</span>
+                        <span class="metric-label">STORE SALES</span>
+                        <strong>₱{{ "{:,.2f}".format(summary.store_sales) }}</strong>
+                        <small>Convenience-store transactions</small>
+                    </article>
+
+                    <article class="metric-card">
+                        <span class="metric-icon">⛽</span>
+                        <span class="metric-label">FUEL SALES</span>
+                        <strong>₱{{ "{:,.2f}".format(summary.fuel_sales) }}</strong>
+                        <small>Fuel transactions</small>
+                    </article>
+
+                    <article class="metric-card {% if low_stock %}attention-card{% endif %}">
+                        <span class="metric-icon">!</span>
+                        <span class="metric-label">LOW-STOCK ITEMS</span>
+                        <strong>{{ low_stock|length }}</strong>
+                        <small>Items requiring attention</small>
+                    </article>
+                </section>
+
+                <section class="report-grid">
+                    <article class="panel report-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">PAYMENT SUMMARY</p>
+                                <h2>Sales by payment method</h2>
+                            </div>
+                        </div>
+
+                        <div class="report-list">
+                            {% for payment in payments %}
+                                <div class="report-row">
+                                    <span>{{ payment.payment_type|upper }}</span>
+                                    <small>{{ payment.transaction_count }} transaction(s)</small>
+                                    <strong>₱{{ "{:,.2f}".format(payment.total_amount) }}</strong>
+                                </div>
+                            {% else %}
+                                <p class="empty-report">No sales found for this date.</p>
+                            {% endfor %}
+                        </div>
+                    </article>
+
+                    <article class="panel report-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">FUEL PERFORMANCE</p>
+                                <h2>Fuel sold</h2>
+                            </div>
+                        </div>
+
+                        <div class="report-list">
+                            {% for fuel in fuel_summary %}
+                                <div class="report-row">
+                                    <span>{{ fuel.fuel_name }}</span>
+                                    <small>{{ fuel.liters_sold }} liters</small>
+                                    <strong>₱{{ "{:,.2f}".format(fuel.total_amount) }}</strong>
+                                </div>
+                            {% else %}
+                                <p class="empty-report">No fuel sales found for this date.</p>
+                            {% endfor %}
+                        </div>
+                    </article>
+                </section>
+
+                <section class="report-grid">
+                    <article class="panel report-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">STORE PERFORMANCE</p>
+                                <h2>Top-selling products</h2>
+                            </div>
+                        </div>
+
+                        <div class="report-list">
+                            {% for product in top_products %}
+                                <div class="report-row">
+                                    <span>{{ product.product_name }}</span>
+                                    <small>{{ product.quantity_sold }} unit(s) sold</small>
+                                    <strong>₱{{ "{:,.2f}".format(product.total_amount) }}</strong>
+                                </div>
+                            {% else %}
+                                <p class="empty-report">No store sales found for this date.</p>
+                            {% endfor %}
+                        </div>
+                    </article>
+
+                    <article class="panel report-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">INVENTORY WATCH</p>
+                                <h2>Low-stock items</h2>
+                            </div>
+                        </div>
+
+                        <div class="report-list">
+                            {% for product in low_stock %}
+                                <div class="report-row">
+                                    <span>{{ product.product_name }}</span>
+                                    <small>Threshold: {{ product.low_stock_threshold }}</small>
+                                    <strong class="low-text">{{ product.stock_quantity }} left</strong>
+                                </div>
+                            {% else %}
+                                <p class="empty-report">All products are above their stock threshold.</p>
+                            {% endfor %}
+                        </div>
+                    </article>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    let confirmForm = null;
+let confirmUrl = "";
+
+function openConfirmDialog(event, title, message, buttonText) {
+
+    event.preventDefault();
+
+    const overlay =
+        document.getElementById("system-dialog-overlay");
+
+    const titleElement =
+        document.getElementById("system-dialog-title");
+
+    const messageElement =
+        document.getElementById("system-dialog-message");
+
+    const confirmButton =
+        document.getElementById("system-dialog-confirm");
+
+    confirmForm =
+        event.currentTarget.tagName === "FORM"
+            ? event.currentTarget
+            : null;
+
+    confirmUrl =
+        event.currentTarget.tagName === "A"
+            ? event.currentTarget.href
+            : "";
+
+    titleElement.textContent = title;
+
+    messageElement.textContent = message;
+
+    confirmButton.textContent = buttonText;
+
+    overlay.classList.add("show");
+
+    document.body.style.overflow = "hidden";
+
+    return false;
+}
+
+
+function closeConfirmDialog() {
+
+    const overlay =
+        document.getElementById("system-dialog-overlay");
+
+    overlay.classList.remove("show");
+
+    document.body.style.overflow = "";
+
+    confirmForm = null;
+
+    confirmUrl = "";
+}
+
+
+document
+    .getElementById("system-dialog-confirm")
+    .addEventListener("click", function () {
+
+        if (confirmForm) {
+
+            const form =
+                confirmForm;
+
+            confirmForm = null;
+
+            form.submit();
+
+            return;
+
+        }
+
+        if (confirmUrl) {
+
+            window.location.href =
+                confirmUrl;
+
+        }
+
+    });
+
+
+document.addEventListener("keydown", function (event) {
+
+    if (event.key === "Escape") {
+
+        closeConfirmDialog();
+
+    }
+
+});
+</body>
+</html>

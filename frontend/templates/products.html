@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Gazz POS | Inventory Control</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+<style>
+
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    table {
+        font-family: "Poppins", sans-serif;
+    }
+
+
+    /* =========================================================
+       INVENTORY SWITCH
+       ========================================================= */
+
+    .inventory-switch {
+        display: flex;
+        gap: 10px;
+        margin-top: 28px;
+        margin-bottom: 24px;
+        padding: 6px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        width: fit-content;
+    }
+
+    .inventory-switch a {
+        text-decoration: none;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 11px 22px;
+        border-radius: 8px;
+        transition: 0.2s ease;
+    }
+
+    .inventory-switch a:hover {
+        color: #111827;
+    }
+
+    .inventory-switch a.active {
+        background: #ffffff;
+        color: #dc2626;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+
+
+    /* =========================================================
+       FUEL
+       ========================================================= */
+
+    .fuel-price {
+        font-weight: 600;
+    }
+
+    .fuel-liters {
+        font-weight: 600;
+    }
+
+    .fuel-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .fuel-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fee2e2;
+        color: #dc2626;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .fuel-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .fuel-info small {
+        color: #94a3b8;
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .fuel-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #16a34a;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .fuel-status::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c55e;
+    }
+
+    .fuel-update-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 22px;
+        background: #dc1824;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 2px;
+        transition: 0.2s ease;
+    }
+
+    .fuel-update-button:hover {
+        background: #b9141e;
+        color: #ffffff;
+    }
+
+    .inventory-empty {
+        text-align: center;
+        padding: 45px 20px;
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       INVENTORY SEARCH
+       ========================================================= */
+
+    .inventory-search {
+        position: relative;
+        width: 340px;
+        flex-shrink: 0;
+    }
+
+    .inventory-search input {
+        width: 100%;
+        height: 48px;
+        padding: 0 45px 0 42px;
+        box-sizing: border-box;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        color: #1f2937;
+        font-family: "Poppins", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        outline: none;
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .inventory-search input::placeholder {
+        color: #94a3b8;
+    }
+
+    .inventory-search input:focus {
+        border-color: #dc2626;
+        box-shadow:
+            0 0 0 3px
+            rgba(220, 38, 38, 0.10);
+    }
+
+    .inventory-search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 15px;
+        pointer-events: none;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .inventory-search-icon svg {
+        display: block;
+    }
+
+    .inventory-search-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 30px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: #64748b;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        transition:
+            background 0.2s ease,
+            color 0.2s ease;
+    }
+
+    .inventory-search-clear:hover {
+        background: #f1f5f9;
+        color: #dc2626;
+    }
+
+
+    /* =========================================================
+       SEARCH RESULT
+       ========================================================= */
+
+    .inventory-row-hidden {
+        display: none !important;
+    }
+
+    .inventory-no-results {
+        display: none;
+        text-align: center;
+        padding: 45px 20px;
+        color: #94a3b8;
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       SYSTEM DIALOG
+       ========================================================= */
+
+    .system-dialog-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 999999;
+    }
+
+    .system-dialog-overlay.show {
+        display: flex;
+    }
+
+    .system-dialog {
+        position: relative;
+        width: 100%;
+        max-width: 430px;
+        margin: auto;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow:
+            0 20px 50px
+            rgba(15, 23, 42, 0.20);
+        overflow: hidden;
+        z-index: 1000000;
+    }
+
+    .system-dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 17px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f8fafc;
+    }
+
+    .system-dialog-brand {
+        color: #dc2626;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+    }
+
+    .system-dialog-close {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        border-radius: 7px;
+        font-size: 22px;
+        cursor: pointer;
+    }
+
+    .system-dialog-close:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+
+    .system-dialog-body {
+        padding: 24px 22px 20px;
+    }
+
+    .system-dialog-title {
+        margin: 0 0 9px;
+        color: #1f2937;
+        font-size: 19px;
+        font-weight: 800;
+    }
+
+    .system-dialog-message {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .system-dialog-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 22px 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .system-dialog-button {
+        min-width: 95px;
+        height: 42px;
+        padding: 0 17px;
+        border: none;
+        border-radius: 7px;
+        font-family: "Poppins", sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .system-dialog-cancel {
+        background: #f1f5f9;
+        color: #374151;
+    }
+
+    .system-dialog-cancel:hover {
+        background: #e2e8f0;
+    }
+
+    .system-dialog-confirm {
+        background: #dc2626;
+        color: #ffffff;
+    }
+
+    .system-dialog-confirm:hover {
+        background: #b91c1c;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 900px) {
+
+        .inventory-title-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 20px;
+        }
+
+        .inventory-search {
+            width: 100%;
+        }
+
+    }
+
+
+    @media (max-width: 768px) {
+
+        .inventory-switch {
+            width: 100%;
+        }
+
+        .inventory-switch a {
+            flex: 1;
+            text-align: center;
+            padding: 10px 12px;
+        }
+
+    }
+
+
+    @media (max-width: 600px) {
+
+        .inventory-search {
+            width: 100%;
+        }
+
+        .inventory-search input {
+            height: 46px;
+        }
+
+        .system-dialog-overlay {
+            padding: 15px;
+        }
+
+        .system-dialog {
+            max-width: 100%;
+        }
+
+    }
+
+
+    /* =========================================================
+       LEFT CONTROL RAIL
+       ========================================================= */
+
+    .control-rail {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+
+        height: 100vh !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        overflow: hidden !important;
+    }
+
+    .control-rail .rail-nav {
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+
+    .control-rail .logout-rail {
+        margin-top: auto !important;
+        margin-bottom: 0 !important;
+
+        flex-shrink: 0 !important;
+    }
+
+</style>
+
+</head>
+
+
+<body>
+
+    <div class="app-shell">
+
+
+        <!-- =====================================================
+             LEFT CONTROL RAIL
+             ===================================================== -->
+
+        <aside class="control-rail">
+
+            <a
+                class="rail-logo"
+                href="#"
+            >
+                G
+            </a>
+
+
+            <nav class="rail-nav">
+
+                <a
+                    class="rail-link {% if request.endpoint == 'reports.manager_analytics' %}active{% endif %}"
+                    href="{{ url_for('reports.manager_analytics') }}"
+                >
+                    <span>⌂</span>
+
+                    <small>
+                        ANALYTICS
+                    </small>
+                </a>
+
+
+                <a
+                    class="rail-link {% if request.endpoint == 'products.products' %}active{% endif %}"
+                    href="{{ url_for('products.products') }}"
+                >
+                    <span>▦</span>
+
+                    <small>
+                        STOCK
+                    </small>
+                </a>
+
+            </nav>
+
+
+<a
+    class="rail-link logout-rail"
+    href="{{ url_for('auth.logout') }}"
+>
+    <span>↪</span>
+    <small>LOG OUT</small>
+</a>
+
+        </aside>
+
+
+        <!-- =====================================================
+             MAIN WORKSPACE
+             ===================================================== -->
+
+        <main class="workspace">
+
+
+            <!-- =================================================
+                 HEADER
+                 ================================================= -->
+
+            <header class="app-header">
+
+                <div
+                    class="station-name"
+                    style="
+                        font-size: 16px;
+                        font-weight: 800;
+                        color: #1f2937;
+                        letter-spacing: 0.5px;
+                    "
+                >
+                    Gazz POS Inventory
+                </div>
+
+
+                <div class="account-chip">
+
+                    <span class="account-initial">
+
+                        {{
+                            (
+                                current_user.full_name[0]
+                                if current_user.full_name
+                                else current_user.username[0]
+                            )|upper
+                        }}
+
+                    </span>
+
+
+                    <div>
+
+                        <strong>
+                            {{
+                                current_user.full_name
+                                if current_user.full_name
+                                else current_user.username
+                            }}
+                        </strong>
+
+
+                        <small>
+                            {{ current_user.role|capitalize }}
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 PAGE AREA
+                 ================================================= -->
+
+            <section class="page-area">
+
+
+                <!-- =================================================
+                     INVENTORY TITLE
+                     ================================================= -->
+
+                <div class="inventory-title-row">
+
+
+                    <div>
+
+                        {% if inventory_type == "fuel" %}
+
+                            <p class="eyebrow">
+                                FUEL STATION
+                            </p>
+
+                            <h1>
+                                Fuel inventory
+                            </h1>
+
+                            <p>
+                                Fuel types, pricing, and latest meter readings.
+                            </p>
+
+                        {% else %}
+
+                            <p class="eyebrow">
+                                CONVENIENCE STORE
+                            </p>
+
+                            <h1>
+                                Product inventory
+                            </h1>
+
+                            <p>
+                                Live quantity and pricing details for all active store products.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         INVENTORY SEARCH
+                         ================================================= -->
+
+                    <div class="inventory-search">
+
+                        <span class="inventory-search-icon">
+
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+
+                                <circle
+                                    cx="11"
+                                    cy="11"
+                                    r="7"
+                                ></circle>
+
+                                <line
+                                    x1="16.5"
+                                    y1="16.5"
+                                    x2="22"
+                                    y2="22"
+                                ></line>
+
+                            </svg>
+
+                        </span>
+
+
+                        <input
+                            type="text"
+                            id="inventorySearch"
+                            placeholder="{% if inventory_type == 'fuel' %}Search fuel type...{% else %}Search product...{% endif %}"
+                            autocomplete="off"
+                        >
+
+
+                        <button
+                            type="button"
+                            id="clearInventorySearch"
+                            class="inventory-search-clear"
+                            aria-label="Clear search"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     INVENTORY SWITCH
+                     ================================================= -->
+
+                <div class="inventory-switch">
+
+                    <a
+                        href="{{ url_for('products.products', inventory_type='store') }}"
+                        class="{% if inventory_type == 'store' %}active{% endif %}"
+                    >
+                        Store Inventory
+                    </a>
+
+
+                    <a
+                        href="{{ url_for('products.products', inventory_type='fuel') }}"
+                        class="{% if inventory_type == 'fuel' %}active{% endif %}"
+                    >
+                        Fuel Inventory
+                    </a>
+
+                </div>
+
+
+                <!-- =================================================
+                     FLASH MESSAGES
+                     ================================================= -->
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+
+                    {% for category, message in messages %}
+
+                        <div class="system-message {{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                {% endwith %}
+
+
+                <!-- =================================================
+                     STORE INVENTORY
+                     ================================================= -->
+
+                {% if inventory_type == "store" %}
+
+
+                    {% if current_user.role == "manager" or current_user.role == "admin" %}
+
+                        <details class="add-product-panel">
+
+                            <summary>
+                                + Add new product
+                            </summary>
+
+
+                            <form
+                                class="product-form"
+                                method="POST"
+                                action="{{ url_for('products.add_product') }}"
+                            >
+
+                                <div class="form-grid">
+
+
+                                    <label>
+
+                                        Product name
+
+                                        <input
+                                            name="product_name"
+                                            type="text"
+                                            required
+                                        >
+
+                                    </label>
+
+
+                                    <label>
+
+                                        Unit
+
+                                        <input
+                                            name="unit"
+                                            type="text"
+                                            placeholder="piece, bottle, pack"
+                                            required
+                                        >
+
+                                    </label>
+
+
+                                    <label>
+
+                                        Selling price
+
+                                        <input
+                                            name="selling_price"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            required
+                                        >
+
+                                    </label>
+
+
+                                    <label>
+
+                                        Cost price
+
+                                        <input
+                                            name="cost_price"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            value="0"
+                                        >
+
+                                    </label>
+
+
+                                    <label>
+
+                                        Low-stock threshold
+
+                                        <input
+                                            name="low_stock_threshold"
+                                            type="number"
+                                            min="0"
+                                            value="5"
+                                            required
+                                        >
+
+                                    </label>
+
+
+                                    <label>
+
+                                        Starting stock
+
+                                        <input
+                                            name="starting_stock"
+                                            type="number"
+                                            min="0"
+                                            value="0"
+                                            required
+                                        >
+
+                                    </label>
+
+                                </div>
+
+
+                                <button
+                                    class="primary-button"
+                                    type="submit"
+                                >
+                                    Save product
+                                </button>
+
+                            </form>
+
+                        </details>
+
+                    {% endif %}
+
+
+                    <section class="panel table-panel">
+
+                        <div class="inventory-table-wrap">
+
+                            <table
+                                class="inventory-table"
+                                id="storeInventoryTable"
+                            >
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Product
+                                        </th>
+
+                                        <th>
+                                            Price
+                                        </th>
+
+                                        <th>
+                                            Quantity
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+
+                                        {% if current_user.role == "manager" or current_user.role == "admin" %}
+
+                                            <th>
+                                                Update stock
+                                            </th>
+
+                                        {% endif %}
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    {% for product in products %}
+
+                                        <tr>
+
+
+                                            <td class="product-cell">
+
+                                                <span class="product-mark">
+                                                    {{ product.product_name[0] }}
+                                                </span>
+
+                                                {{ product.product_name }}
+
+                                                <small class="unit-text">
+                                                    {{ product.unit }}
+                                                </small>
+
+                                            </td>
+
+
+                                            <td>
+                                                ₱{{ "{:,.2f}".format(product.selling_price) }}
+                                            </td>
+
+
+                                            <td>
+
+                                                <strong>
+                                                    {{ product.stock_quantity }}
+                                                </strong>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                {% if product.stock_quantity <= product.low_stock_threshold %}
+
+                                                    <span class="stock-state low">
+                                                        Low stock
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="stock-state ready">
+                                                        In stock
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+                                            {% if current_user.role == "manager" or current_user.role == "admin" %}
+
+                                                <td>
+
+                                                    <form
+                                                        class="stock-form"
+                                                        method="POST"
+                                                        action="{{ url_for('products.adjust_inventory', product_id=product.product_id) }}"
+                                                    >
+
+
+                                                        <select
+                                                            name="movement_type"
+                                                            title="Inventory movement type"
+                                                        >
+
+                                                            <option value="stock_in">
+                                                                Restock
+                                                            </option>
+
+                                                            <option value="stock_out">
+                                                                Deduct
+                                                            </option>
+
+                                                        </select>
+
+
+                                                        <input
+                                                            name="quantity"
+                                                            type="number"
+                                                            min="1"
+                                                            placeholder="Qty"
+                                                            required
+                                                        >
+
+
+                                                        <select
+                                                            name="reason"
+                                                            title="Inventory adjustment reason"
+                                                            required
+                                                        >
+
+                                                            <option value="">
+                                                                Select reason
+                                                            </option>
+
+                                                            <option value="Stock received">
+                                                                Stock received
+                                                            </option>
+
+                                                            <option value="Damaged product">
+                                                                Damaged product
+                                                            </option>
+
+                                                            <option value="Expired product">
+                                                                Expired product
+                                                            </option>
+
+                                                            <option value="Inventory correction">
+                                                                Inventory correction
+                                                            </option>
+
+                                                            <option value="Product return">
+                                                                Product return
+                                                            </option>
+
+                                                            <option value="Lost/Missing stock">
+                                                                Lost/Missing stock
+                                                            </option>
+
+                                                            <option value="Other">
+                                                                Other
+                                                            </option>
+
+                                                        </select>
+
+
+                                                        <button type="submit">
+                                                            Update
+                                                        </button>
+
+                                                    </form>
+
+                                                </td>
+
+                                            {% endif %}
+
+                                        </tr>
+
+
+                                    {% else %}
+
+                                        <tr>
+
+                                            <td
+                                                colspan="{% if current_user.role == 'manager' or current_user.role == 'admin' %}5{% else %}4{% endif %}"
+                                            >
+
+                                                <div class="inventory-empty">
+                                                    No store products found.
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </section>
+
+
+                <!-- =================================================
+                     FUEL INVENTORY
+                     ================================================= -->
+
+                {% else %}
+
+
+                    <section class="panel table-panel">
+
+                        <div class="inventory-table-wrap">
+
+                            <table
+                                class="inventory-table"
+                                id="fuelInventoryTable"
+                            >
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Fuel Type
+                                        </th>
+
+                                        <th>
+                                            Price / Liter
+                                        </th>
+
+                                        <th>
+                                            Liters
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+
+                                        {% if current_user.role == "manager" or current_user.role == "admin" %}
+
+                                            <th>
+                                                Update Stock
+                                            </th>
+
+                                        {% endif %}
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+
+                                    {% for fuel in fuel_products %}
+
+                                        <tr>
+
+
+                                            <td>
+
+                                                <div class="fuel-name">
+
+                                                    <span class="fuel-mark">
+                                                        {{ fuel.fuel_name[0] }}
+                                                    </span>
+
+
+                                                    <div class="fuel-info">
+
+                                                        <strong>
+                                                            {{ fuel.fuel_name }}
+                                                        </strong>
+
+                                                        <small>
+
+                                                            Tank capacity:
+
+                                                            {{ "{:,.3f}".format(fuel.tank_capacity) }}
+
+                                                            L
+
+                                                        </small>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+
+                                            <td class="fuel-price">
+
+                                                ₱{{ "{:,.2f}".format(fuel.price_per_liter) }}
+
+                                            </td>
+
+
+                                            <td class="fuel-liters">
+
+                                                <strong>
+
+                                                    {{ "{:,.3f}".format(fuel.current_liters) }}
+
+                                                    L
+
+                                                </strong>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                {% if fuel.current_liters <= 0 %}
+
+                                                    <span class="stock-state low">
+                                                        Empty
+                                                    </span>
+
+                                                {% elif fuel.current_liters <= fuel.tank_capacity * 20 / 100 %}
+
+                                                    <span class="stock-state low">
+                                                        Low fuel
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span class="stock-state ready">
+                                                        In stock
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </td>
+
+
+                                            {% if current_user.role == "manager" or current_user.role == "admin" %}
+
+                                                <td>
+
+                                                    <form
+                                                        class="stock-form"
+                                                        method="POST"
+                                                        action="{{ url_for('fuel.update_fuel_inventory', fuel_type_id=fuel.fuel_type_id) }}"
+                                                    >
+
+
+                                                        <select
+                                                            name="movement_type"
+                                                            title="Fuel inventory movement type"
+                                                        >
+
+                                                            <option value="stock_in">
+                                                                Restock
+                                                            </option>
+
+                                                            <option value="stock_out">
+                                                                Deduct
+                                                            </option>
+
+                                                            <option value="adjustment">
+                                                                Adjustment
+                                                            </option>
+
+                                                        </select>
+
+
+                                                        <input
+                                                            name="quantity"
+                                                            type="number"
+                                                            step="0.001"
+                                                            min="0.001"
+                                                            placeholder="Liters"
+                                                            required
+                                                        >
+
+
+                                                        <select
+                                                            name="reason"
+                                                            title="Fuel inventory adjustment reason"
+                                                            required
+                                                        >
+
+                                                            <option value="">
+                                                                Select reason
+                                                            </option>
+
+                                                            <option value="Fuel delivery">
+                                                                Fuel delivery
+                                                            </option>
+
+                                                            <option value="Fuel transfer">
+                                                                Fuel transfer
+                                                            </option>
+
+                                                            <option value="Fuel loss">
+                                                                Fuel loss
+                                                            </option>
+
+                                                            <option value="Tank correction">
+                                                                Tank correction
+                                                            </option>
+
+                                                            <option value="Inventory correction">
+                                                                Inventory correction
+                                                            </option>
+
+                                                            <option value="Other">
+                                                                Other
+                                                            </option>
+
+                                                        </select>
+
+
+                                                        <button type="submit">
+                                                            Update
+                                                        </button>
+
+                                                    </form>
+
+                                                </td>
+
+                                            {% endif %}
+
+                                        </tr>
+
+
+                                    {% else %}
+
+                                        <tr>
+
+                                            <td
+                                                colspan="{% if current_user.role == 'manager' or current_user.role == 'admin' %}5{% else %}4{% endif %}"
+                                            >
+
+                                                <div class="inventory-empty">
+                                                    No fuel inventory records found.
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </section>
+
+
+                {% endif %}
+
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- =========================================================
+         CONFIRMATION DIALOG
+         ========================================================= -->
+
+    <div
+        id="system-dialog-overlay"
+        class="system-dialog-overlay"
+        onclick="closeConfirmDialog()"
+    >
+
+        <div
+            class="system-dialog"
+            onclick="event.stopPropagation()"
+        >
+
+
+            <div class="system-dialog-header">
+
+                <span class="system-dialog-brand">
+                    GAZZ POS INVENTORY
+                </span>
+
+
+                <button
+                    type="button"
+                    class="system-dialog-close"
+                    onclick="closeConfirmDialog()"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="system-dialog-body">
+
+                <h3
+                    id="system-dialog-title"
+                    class="system-dialog-title"
+                >
+                    Confirm Action
+                </h3>
+
+
+                <p
+                    id="system-dialog-message"
+                    class="system-dialog-message"
+                >
+                    Are you sure?
+                </p>
+
+            </div>
+
+
+            <div class="system-dialog-actions">
+
+                <button
+                    type="button"
+                    class="system-dialog-button system-dialog-cancel"
+                    onclick="closeConfirmDialog()"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    type="button"
+                    id="system-dialog-confirm"
+                    class="system-dialog-button system-dialog-confirm"
+                >
+                    Confirm
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+         ========================================================= -->
+
+    <script>
+
+        /* =========================================================
+           INVENTORY SEARCH
+           ========================================================= */
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+
+                const searchInput =
+                    document.getElementById(
+                        "inventorySearch"
+                    );
+
+
+                const clearButton =
+                    document.getElementById(
+                        "clearInventorySearch"
+                    );
+
+
+                const storeTable =
+                    document.getElementById(
+                        "storeInventoryTable"
+                    );
+
+
+                const fuelTable =
+                    document.getElementById(
+                        "fuelInventoryTable"
+                    );
+
+
+                if (!searchInput) {
+                    return;
+                }
+
+
+                function searchInventory() {
+
+
+                    const searchText =
+                        searchInput.value
+                            .toLowerCase()
+                            .trim();
+
+
+                    /* Show / hide clear button */
+
+                    if (searchText.length > 0) {
+
+                        clearButton.style.display =
+                            "flex";
+
+                    } else {
+
+                        clearButton.style.display =
+                            "none";
+
+                    }
+
+
+                    /* =================================================
+                       STORE INVENTORY
+                       ================================================= */
+
+                    if (storeTable) {
+
+
+                        const rows =
+                            storeTable.querySelectorAll(
+                                "tbody tr"
+                            );
+
+
+                        let visibleRows = 0;
+
+
+                        rows.forEach(
+                            function (row) {
+
+
+                                /* Ignore empty-state row */
+
+                                if (
+                                    row.querySelector(
+                                        ".inventory-empty"
+                                    )
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                const productName =
+                                    row.cells[0]
+                                        ? row.cells[0]
+                                            .textContent
+                                            .toLowerCase()
+                                            .trim()
+                                        : "";
+
+
+                                if (
+                                    productName.includes(
+                                        searchText
+                                    )
+                                ) {
+
+                                    row.style.display =
+                                        "";
+
+                                    visibleRows++;
+
+                                } else {
+
+                                    row.style.display =
+                                        "none";
+
+                                }
+
+                            }
+                        );
+
+
+                        let noResults =
+                            document.getElementById(
+                                "storeSearchNoResults"
+                            );
+
+
+                        if (
+                            searchText !== "" &&
+                            visibleRows === 0
+                        ) {
+
+
+                            if (!noResults) {
+
+
+                                noResults =
+                                    document.createElement(
+                                        "tr"
+                                    );
+
+
+                                noResults.id =
+                                    "storeSearchNoResults";
+
+
+                                noResults.innerHTML = `
+                                    <td
+                                        colspan="5"
+                                        style="
+                                            text-align:center;
+                                            padding:40px 20px;
+                                            color:#94a3b8;
+                                            font-size:13px;
+                                        "
+                                    >
+                                        No matching products found.
+                                    </td>
+                                `;
+
+
+                                storeTable
+                                    .querySelector("tbody")
+                                    .appendChild(
+                                        noResults
+                                    );
+
+                            }
+
+
+                            noResults.style.display =
+                                "table-row";
+
+
+                        } else {
+
+
+                            if (noResults) {
+
+                                noResults.style.display =
+                                    "none";
+
+                            }
+
+                        }
+
+                    }
+
+
+                    /* =================================================
+                       FUEL INVENTORY
+                       ================================================= */
+
+                    if (fuelTable) {
+
+
+                        const rows =
+                            fuelTable.querySelectorAll(
+                                "tbody tr"
+                            );
+
+
+                        let visibleRows = 0;
+
+
+                        rows.forEach(
+                            function (row) {
+
+
+                                /* Ignore empty-state row */
+
+                                if (
+                                    row.querySelector(
+                                        ".inventory-empty"
+                                    )
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                const fuelName =
+                                    row.cells[0]
+                                        ? row.cells[0]
+                                            .textContent
+                                            .toLowerCase()
+                                            .trim()
+                                        : "";
+
+
+                                if (
+                                    fuelName.includes(
+                                        searchText
+                                    )
+                                ) {
+
+                                    row.style.display =
+                                        "";
+
+                                    visibleRows++;
+
+                                } else {
+
+                                    row.style.display =
+                                        "none";
+
+                                }
+
+                            }
+                        );
+
+
+                        let noResults =
+                            document.getElementById(
+                                "fuelSearchNoResults"
+                            );
+
+
+                        if (
+                            searchText !== "" &&
+                            visibleRows === 0
+                        ) {
+
+
+                            if (!noResults) {
+
+
+                                noResults =
+                                    document.createElement(
+                                        "tr"
+                                    );
+
+
+                                noResults.id =
+                                    "fuelSearchNoResults";
+
+
+                                noResults.innerHTML = `
+                                    <td
+                                        colspan="5"
+                                        style="
+                                            text-align:center;
+                                            padding:40px 20px;
+                                            color:#94a3b8;
+                                            font-size:13px;
+                                        "
+                                    >
+                                        No matching fuel types found.
+                                    </td>
+                                `;
+
+
+                                fuelTable
+                                    .querySelector("tbody")
+                                    .appendChild(
+                                        noResults
+                                    );
+
+                            }
+
+
+                            noResults.style.display =
+                                "table-row";
+
+
+                        } else {
+
+
+                            if (noResults) {
+
+                                noResults.style.display =
+                                    "none";
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+
+                /* =====================================================
+                   SEARCH WHILE TYPING
+                   ===================================================== */
+
+                searchInput.addEventListener(
+                    "input",
+                    searchInventory
+                );
+
+
+                /* =====================================================
+                   CLEAR BUTTON
+                   ===================================================== */
+
+                clearButton.addEventListener(
+                    "click",
+                    function () {
+
+                        searchInput.value = "";
+
+                        searchInventory();
+
+                        searchInput.focus();
+
+                    }
+                );
+
+
+                /* =====================================================
+                   ESCAPE TO CLEAR
+                   ===================================================== */
+
+                searchInput.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (
+                            event.key === "Escape"
+                        ) {
+
+                            searchInput.value = "";
+
+                            searchInventory();
+
+                            searchInput.focus();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* =========================================================
+           CONFIRMATION DIALOG
+           ========================================================= */
+
+        let confirmForm = null;
+
+        let confirmUrl = "";
+
+
+        function openConfirmDialog(
+            event,
+            title,
+            message,
+            buttonText
+        ) {
+
+
+            event.preventDefault();
+
+
+            const overlay =
+                document.getElementById(
+                    "system-dialog-overlay"
+                );
+
+
+            const titleElement =
+                document.getElementById(
+                    "system-dialog-title"
+                );
+
+
+            const messageElement =
+                document.getElementById(
+                    "system-dialog-message"
+                );
+
+
+            const confirmButton =
+                document.getElementById(
+                    "system-dialog-confirm"
+                );
+
+
+            confirmForm =
+                event.currentTarget.tagName === "FORM"
+                    ? event.currentTarget
+                    : null;
+
+
+            confirmUrl =
+                event.currentTarget.tagName === "A"
+                    ? event.currentTarget.href
+                    : "";
+
+
+            titleElement.textContent =
+                title;
+
+
+            messageElement.textContent =
+                message;
+
+
+            confirmButton.textContent =
+                buttonText;
+
+
+            overlay.classList.add("show");
+
+
+            document.body.style.overflow =
+                "hidden";
+
+
+            return false;
+
+        }
+
+
+        function closeConfirmDialog() {
+
+
+            const overlay =
+                document.getElementById(
+                    "system-dialog-overlay"
+                );
+
+
+            overlay.classList.remove("show");
+
+
+            document.body.style.overflow =
+                "";
+
+
+            confirmForm = null;
+
+            confirmUrl = "";
+
+        }
+
+
+        document
+            .getElementById("system-dialog-confirm")
+            .addEventListener(
+                "click",
+                function () {
+
+
+                    if (confirmForm) {
+
+
+                        const form =
+                            confirmForm;
+
+
+                        confirmForm = null;
+
+
+                        form.submit();
+
+
+                        return;
+
+                    }
+
+
+                    if (confirmUrl) {
+
+                        window.location.href =
+                            confirmUrl;
+
+                    }
+
+                }
+            );
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closeConfirmDialog();
+
+                }
+
+            }
+        );
+
+    </script>
+<script src="{{ url_for('static', filename='js/logout-confirm.js') }}"></script>
+</body>
+
+</html>

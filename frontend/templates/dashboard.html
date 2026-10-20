@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gazz POS | Operations Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="control-rail">
+            <a class="rail-logo" href="{{ url_for('auth.dashboard') }}">G</a>
+
+            <nav class="rail-nav">
+                <a class="rail-link active" href="{{ url_for('auth.dashboard') }}" title="Dashboard">
+                    <span>⌂</span>
+                    <small>Home</small>
+                </a>
+
+                <a class="rail-link" href="{{ url_for('products.products') }}" title="Products and Inventory">
+                    <span>▦</span>
+                    <small>Stock</small>
+                </a>
+
+<a class="rail-link" href="{{ url_for('fuel.fuel') }}">
+    <span>⛽</span>
+    <small>Fuel</small>
+</a>
+
+<a class="rail-link" href="{{ url_for('sales.pos') }}">
+    <span>₱</span>
+    <small>Sales</small>
+</a>
+
+{% if current_user.role == "manager" %}
+    <a class="rail-link" href="{{ url_for('reports.reports') }}">
+        <span>◫</span>
+        <small>Reports</small>
+    </a>
+{% endif %}
+            </nav>
+
+            <a class="rail-link logout-rail" href="{{ url_for('auth.logout') }}">
+                <span>↪</span>
+                <small>Log out</small>
+            </a>
+        </aside>
+
+        <main class="workspace">
+            <header class="app-header">
+                <div class="station-name">
+                    <span class="signal-dot"></span>
+                    GAZZ STATION · LIVE OPERATIONS
+                </div>
+
+                <div class="account-chip">
+                    <span class="account-initial">{{ current_user.full_name[0] }}</span>
+                    <div>
+                        <strong>{{ current_user.full_name }}</strong>
+                        <small>{{ current_user.role|capitalize }}</small>
+                    </div>
+                </div>
+            </header>
+
+            <section class="page-area">
+                <section class="welcome-panel">
+                    <div>
+                        <p class="eyebrow">OPERATIONS OVERVIEW</p>
+                        <h1>Good day, {{ current_user.full_name.split(' ')[0] }}.</h1>
+                        <p class="welcome-text">
+                            Monitor station activity, inventory, and sales from one place.
+                        </p>
+                    </div>
+
+                    <div class="live-status">
+                        <span class="live-indicator"></span>
+                        System online
+                    </div>
+                </section>
+
+                <section class="metric-grid">
+                    <article class="metric-card featured-metric">
+                        <span class="metric-label">TODAY'S SALES</span>
+                        <strong>₱{{ "{:,.2f}".format(stats.today_sales) }}</strong>
+                        <small>Completed transactions today</small>
+                    </article>
+
+                    <article class="metric-card">
+                        <span class="metric-icon">▦</span>
+                        <span class="metric-label">ACTIVE PRODUCTS</span>
+                        <strong>{{ stats.total_products }}</strong>
+                        <small>Available convenience items</small>
+                    </article>
+
+                    <article class="metric-card {% if stats.total_low_stock > 0 %}attention-card{% endif %}">
+                        <span class="metric-icon">!</span>
+                        <span class="metric-label">STOCK ALERTS</span>
+                        <strong>{{ stats.total_low_stock }}</strong>
+                        <small>Items need monitoring</small>
+                    </article>
+
+                    <article class="metric-card">
+                        <span class="metric-icon">⛽</span>
+                        <span class="metric-label">ACTIVE PUMPS</span>
+                        <strong>{{ stats.total_pumps }}</strong>
+                        <small>Pumps in service</small>
+                    </article>
+                </section>
+
+                <section class="dashboard-grid">
+                    <article class="panel inventory-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">INVENTORY WATCH</p>
+                                <h2>Low-stock items</h2>
+                            </div>
+                            <a href="{{ url_for('products.products') }}">View inventory →</a>
+                        </div>
+
+                        {% if low_stock %}
+                            <div class="alert-list">
+                                {% for product in low_stock %}
+                                    <div class="alert-row">
+                                        <div class="alert-symbol">!</div>
+                                        <div class="alert-product">
+                                            <strong>{{ product.product_name }}</strong>
+                                            <span>Threshold: {{ product.low_stock_threshold }} {{ product.unit|default('units') }}</span>
+                                        </div>
+                                        <div class="alert-quantity">
+                                            <strong>{{ product.stock_quantity }}</strong>
+                                            <span>left</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="all-clear">
+                                <span>✓</span>
+                                <div>
+                                    <strong>Inventory is looking good.</strong>
+                                    <p>No products are currently below their stock threshold.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </article>
+
+                    <article class="panel station-panel">
+                        <p class="eyebrow">STATION STATUS</p>
+                        <h2>Ready for operations</h2>
+
+                        <div class="status-line">
+                            <span>Database</span>
+                            <strong><i></i> Connected</strong>
+                        </div>
+                        <div class="status-line">
+                            <span>Fuel pumps</span>
+                            <strong>{{ stats.total_pumps }} active</strong>
+                        </div>
+                        <div class="status-line">
+                            <span>User access</span>
+                            <strong>{{ current_user.role|capitalize }}</strong>
+                        </div>
+
+                        <div class="station-footer">
+                            Gazz POS & Inventory<br>
+                            <small>Red · White · Black operational interface</small>
+                        </div>
+                    </article>
+                </section>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

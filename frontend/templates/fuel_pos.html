@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gazz POS | Fuel Sale</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .pos-layout {
+    width: 100%;
+    max-width: none;
+    display: block;
+}
+
+        .pos-form-panel {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        .system-message {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        .pos-form {
+            width: 100%;
+        }
+
+        .sale-total-box {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .system-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+        #cash-field {
+            display: flex;
+        }
+
+        #cash-field .cash-input-wrapper {
+            width: 100%;
+        }
+
+        .cash-input-wrapper input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .pos-button {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <aside class="control-rail">
+
+        <a class="rail-logo" href="#">G</a>
+
+        <nav class="rail-nav">
+
+            {% if current_user.role in ['manager', 'admin'] %}
+
+            <a class="rail-link" href="{{ url_for('reports.manager_analytics') }}">
+                <span>⌂</span>
+                <small>Analytics</small>
+            </a>
+
+            <a class="rail-link" href="{{ url_for('products.products') }}">
+                <span>▦</span>
+                <small>Stock</small>
+            </a>
+
+            <a class="rail-link" href="{{ url_for('fuel.fuel') }}">
+                <span>⛽</span>
+                <small>Fuel</small>
+            </a>
+
+            {% endif %}
+
+            {% if current_user.role in ['fuel_cashier', 'attendant', 'manager', 'admin'] %}
+
+            <a class="rail-link active" href="{{ url_for('sales.fuel_pos') }}">
+                <span>⛽</span>
+                <small>Fuel POS</small>
+            </a>
+
+            {% endif %}
+
+            {% if current_user.role in ['store_cashier', 'cashier', 'manager', 'admin'] %}
+
+            <a class="rail-link" href="{{ url_for('sales.convenience_pos') }}">
+                <span>₱</span>
+                <small>Sales</small>
+            </a>
+
+            {% endif %}
+
+        </nav>
+<a
+    class="rail-link logout-rail"
+    href="{{ url_for('auth.logout') }}"
+>
+    <span>↪</span>
+    <small>Log out</small>
+</a>
+    </aside>
+
+    <main class="workspace">
+
+        <header class="app-header">
+
+            <div class="station-name" style="font-size: 16px; font-weight: 800; color: #1f2937; letter-spacing: 0.5px;">
+
+                Gazz POS Inventory
+
+            </div>
+
+            <div class="account-chip">
+
+                <span class="account-initial">
+                    {{ current_user.full_name[0] if current_user.full_name else current_user.username[0]|upper }}
+                </span>
+
+                <div>
+
+                    <strong>
+                        {{ current_user.full_name if current_user.full_name else current_user.username }}
+                    </strong>
+
+                    <small>
+                        {{ current_user.role|capitalize }}
+                    </small>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <section class="page-area">
+
+            <div class="inventory-title-row">
+
+                <div>
+
+                    <p class="eyebrow">
+                        FUEL TRANSACTION
+                    </p>
+
+                    <h1>
+                        New fuel sale
+                    </h1>
+
+                    <p>
+                        Select the customer (optional), pump, fuel type, and liters dispensed.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="pos-tabs">
+
+                {% if current_user.role in ['store_cashier', 'cashier', 'manager', 'admin'] %}
+
+                <a href="{{ url_for('sales.convenience_pos') }}">
+                    Store sale
+                </a>
+
+                {% endif %}
+
+                {% if current_user.role in ['fuel_cashier', 'attendant', 'manager', 'admin'] %}
+
+                <a class="active" href="{{ url_for('sales.fuel_pos') }}">
+                    Fuel sale
+                </a>
+
+                {% endif %}
+
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% for category, message in messages %}
+
+                <div class="system-message {{ category }}">
+                    {{ message }}
+                </div>
+
+                {% endfor %}
+
+            {% endwith %}
+
+            <section class="pos-layout">
+
+                <article class="panel pos-form-panel">
+
+                    <p class="eyebrow">
+                        TRANSACTION DETAILS
+                    </p>
+
+                    <h2>
+                        Fuel checkout
+                    </h2>
+
+                    <form
+                        class="pos-form"
+                        method="POST"
+                        action="{{ url_for('sales.complete_fuel_sale') }}"
+                    >
+
+                       
+
+                        <label>
+
+                            Pump
+
+                            <select
+                                id="pump_id"
+                                name="pump_id"
+                                required
+                            >
+
+                                <option value="">
+                                    Select pump
+                                </option>
+
+                                {% for pump in pumps %}
+
+                                <option
+                                    value="{{ pump.pump_id }}"
+                                    data-fuel="{{ pump.fuel_name }}"
+                                    data-price="{{ pump.price_per_liter }}"
+                                >
+
+                                    {{ pump.pump_number }}
+                                    — {{ pump.fuel_name }}
+                                    — ₱{{ "{:,.2f}".format(pump.price_per_liter) }}/L
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </label>
+
+                        <label>
+
+                            Liters dispensed
+
+                            <input
+                                id="liters"
+                                name="liters"
+                                type="number"
+                                step="0.001"
+                                min="0.001"
+                                required
+                            >
+
+                        </label>
+
+                        <label>
+
+                            Payment method
+
+                            <select
+                                id="payment_type"
+                                name="payment_type"
+                            >
+
+                                <option value="cash">
+                                    Cash
+                                </option>
+
+                                <option value="gcash">
+                                    GCash
+                                </option>
+
+                                <option value="other">
+                                    Credit Card
+                                </option>
+
+                            </select>
+
+                        </label>
+
+                        <label id="cash-field">
+
+                            <span class="cash-input-wrapper">
+
+                                Cash received
+
+                                <input
+                                    id="amount_received"
+                                    name="amount_received"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value="0"
+                                >
+
+                            </span>
+
+                        </label>
+
+                        <div class="sale-total-box">
+
+                            <div>
+
+                                <span>
+                                    Total Due
+                                </span>
+
+                                <strong id="sale-total">
+                                    ₱0.00
+                                </strong>
+
+                            </div>
+
+                            <div style="margin-top: 10px;">
+
+                                <span>
+                                    Change
+                                </span>
+
+                                <strong
+                                    id="sale-change"
+                                    style="color: #2e7d32;"
+                                >
+                                    ₱0.00
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        <button
+                            class="primary-button pos-button"
+                            type="submit"
+                        >
+                            Complete fuel sale
+                        </button>
+
+                    </form>
+
+                </article>
+
+            </section>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div
+    id="system-dialog-overlay"
+    class="system-dialog-overlay"
+>
+
+    <div
+        class="system-dialog"
+        onclick="event.stopPropagation()"
+    >
+
+        <div class="system-dialog-header">
+
+            <span class="system-dialog-brand">
+
+                GAZZ POS INVENTORY
+
+            </span>
+
+
+
+            <button
+
+                type="button"
+
+                class="system-dialog-close"
+
+                onclick="closeConfirmDialog()"
+
+            >
+
+                ×
+
+            </button>
+
+        </div>
+
+
+
+        <div class="system-dialog-body">
+
+            <h3
+                id="system-dialog-title"
+                class="system-dialog-title"
+            >
+
+                Confirm Action
+
+            </h3>
+
+
+
+            <p
+                id="system-dialog-message"
+                class="system-dialog-message"
+            >
+
+                Are you sure?
+
+            </p>
+
+        </div>
+
+
+
+        <div class="system-dialog-actions">
+
+            <button
+                type="button"
+                class="system-dialog-button system-dialog-cancel"
+                onclick="closeConfirmDialog()"
+            >
+
+                Cancel
+
+            </button>
+
+
+
+            <button
+                type="button"
+                id="system-dialog-confirm"
+                class="system-dialog-button system-dialog-confirm"
+            >
+
+                Confirm
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const pumpSelect =
+        document.getElementById("pump_id");
+
+    const litersInput =
+        document.getElementById("liters");
+
+    const amountReceivedInput =
+        document.getElementById("amount_received");
+
+    const paymentType =
+        document.getElementById("payment_type");
+
+    const totalElement =
+        document.getElementById("sale-total");
+
+    const changeElement =
+        document.getElementById("sale-change");
+
+    const cashField =
+        document.getElementById("cash-field");
+
+
+    function updateSaleDetails() {
+
+        const selectedOption =
+            pumpSelect.options[pumpSelect.selectedIndex];
+
+        const price =
+            parseFloat(selectedOption.dataset.price) || 0;
+
+        const liters =
+            parseFloat(litersInput.value) || 0;
+
+        const amountReceived =
+            parseFloat(amountReceivedInput.value) || 0;
+
+        const total =
+            price * liters;
+
+        totalElement.textContent =
+            "₱" + total.toFixed(2);
+
+        let change = 0;
+
+        if (paymentType.value === "cash") {
+
+            if (amountReceived >= total && total > 0) {
+
+                change =
+                    amountReceived - total;
+
+            }
+
+        }
+
+        changeElement.textContent =
+            "₱" + change.toFixed(2);
+
+    }
+
+
+    function updatePaymentField() {
+
+        const isCash =
+            paymentType.value === "cash";
+
+        cashField.style.display =
+            isCash ? "flex" : "none";
+
+        updateSaleDetails();
+
+    }
+
+
+    pumpSelect.addEventListener(
+        "change",
+        updateSaleDetails
+    );
+
+    litersInput.addEventListener(
+        "input",
+        updateSaleDetails
+    );
+
+    amountReceivedInput.addEventListener(
+        "input",
+        updateSaleDetails
+    );
+
+    amountReceivedInput.addEventListener(
+        "change",
+        updateSaleDetails
+    );
+
+    paymentType.addEventListener(
+        "change",
+        updatePaymentField
+    );
+
+
+    updatePaymentField();
+
+});
+
+let confirmForm = null;
+let confirmUrl = "";
+
+function openConfirmDialog(event, title, message, buttonText) {
+
+    event.preventDefault();
+
+    const overlay =
+        document.getElementById("system-dialog-overlay");
+
+    const titleElement =
+        document.getElementById("system-dialog-title");
+
+    const messageElement =
+        document.getElementById("system-dialog-message");
+
+    const confirmButton =
+        document.getElementById("system-dialog-confirm");
+
+    confirmForm =
+        event.currentTarget.tagName === "FORM"
+            ? event.currentTarget
+            : null;
+
+    confirmUrl =
+        event.currentTarget.tagName === "A"
+            ? event.currentTarget.href
+            : "";
+
+    titleElement.textContent = title;
+
+    messageElement.textContent = message;
+
+    confirmButton.textContent = buttonText;
+
+    overlay.classList.add("show");
+
+    document.body.style.overflow = "hidden";
+
+    return false;
+}
+
+
+function closeConfirmDialog() {
+
+    const overlay =
+        document.getElementById("system-dialog-overlay");
+
+    overlay.classList.remove("show");
+
+    document.body.style.overflow = "";
+
+    confirmForm = null;
+
+    confirmUrl = "";
+}
+
+
+document
+    .getElementById("system-dialog-confirm")
+    .addEventListener("click", function () {
+
+        if (confirmForm) {
+
+            const form =
+                confirmForm;
+
+            confirmForm = null;
+
+            form.submit();
+
+            return;
+
+        }
+
+        if (confirmUrl) {
+
+            window.location.href =
+                confirmUrl;
+
+        }
+
+    });
+
+
+document.addEventListener("keydown", function (event) {
+
+    if (event.key === "Escape") {
+
+        closeConfirmDialog();
+
+    }
+
+});
+
+</script>
+<script src="{{ url_for('static', filename='js/logout-confirm.js') }}"></script>
+</body>
+
+</html>
